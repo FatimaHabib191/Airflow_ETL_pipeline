@@ -1,0 +1,56 @@
+# Astro CLI merges this file with its own compose file on `astro dev start`.
+# The `airflow` network is created by Astro; joining it lets every container
+# reach the others by service name (for example mongodb:27017).
+#
+# These credentials are for this local development stack only.
+
+services:
+  mongodb:
+    image: mongo:8.0
+    container_name: currency_mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin123
+    ports:
+      # 27018 on the host avoids clashing with a locally installed MongoDB.
+      - "27018:27017"
+    networks:
+      - airflow
+    volumes:
+      - mongo_data:/data/db
+      - mongo_config:/data/configdb
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  mongo-express:
+    image: mongo-express:1.0
+    container_name: currency_mongo_express
+    restart: unless-stopped
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    environment:
+      ME_CONFIG_MONGODB_URL: mongodb://admin:admin123@mongodb:27017/?authSource=admin
+      ME_CONFIG_BASICAUTH: "true"
+      ME_CONFIG_BASICAUTH_USERNAME: admin
+      ME_CONFIG_BASICAUTH_PASSWORD: admin123
+    ports:
+      - "8081:8081"
+    networks:
+      - airflow
+
+  # Tasks run inside the scheduler container under LocalExecutor.
+  scheduler:
+    environment:
+      MONGO_URI: mongodb://admin:admin123@mongodb:27017/?authSource=admin
+
+volumes:
+  mongo_data:
+    driver: local
+  mongo_config:
+    driver: local
