@@ -9,6 +9,34 @@ Frankfurter API -> extract_exchange_rates -> transform_exchange_rates -> load_to
                         XCom: raw_exchange_rates   XCom: transformed_exchange_rates
 ```
 
+## Tech stack
+
+Apache Airflow 3.3 (Astro CLI), Python, MongoDB 8, Mongo Express, Docker
+
+## Results
+
+**Successful DAG runs**
+
+![Dag runs](docs/images/dag-runs.png)
+
+**Transformed data passed through named XCom**
+
+![XCom](docs/images/xcom.png)
+
+**Documents stored in MongoDB**
+
+![Mongo Express](docs/images/mongo-data.png)
+
+## Project structure
+
+```
+dags/currency_exchange_etl.py    Pipeline code and DAG definition
+docker-compose.override.yml      MongoDB and Mongo Express services
+tests/dags/                      DAG structure and transform tests
+Dockerfile                       Astro Runtime image
+requirements.txt                 Python dependencies
+```
+
 ## Requirements
 
 - Docker Desktop, running
